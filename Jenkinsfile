@@ -1,27 +1,40 @@
 pipeline {
-  agent any
-    
-  tools {nodejs "nodejs"}
-    
-  stages {
-        
-    stage('Git') {
-      steps {
-        git 'https://github.com/nlrchudamani/node-js-sample.git'
-      }
+    environment {
+    registry = "nlrcmani/sample-node"
+    registryCredential = 'dockerhub'
+    dockerImage = ''
     }
-     
-    stage('Build') {
-      steps {
-        sh 'npm install'
-      }
-    }  
-    
-            
-    stage('Test') {
-      steps {
-        sh 'npm test'
-      }
+
+    agent any
+    stages {
+            stage('Cloning our Git') {
+                steps {
+                git 'https://github.com/nlrchudamani/node-js-sample.git'
+                }
+            }
+
+            stage('Building Docker Image') {
+                steps {
+                    script {
+                        dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    }
+                }
+            }
+
+            stage('Deploying Docker Image to Dockerhub') {
+                steps {
+                    script {
+                        docker.withRegistry('', registryCredential) {
+                        dockerImage.push()
+                        }
+                    }
+                }
+            }
+
+            stage('Cleaning Up') {
+                steps{
+                  sh "docker rmi --force $registry:$BUILD_NUMBER"
+                }
+            }
+        }
     }
-  }
-}
