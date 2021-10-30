@@ -1,7 +1,7 @@
 pipeline {
     environment {
     registry = "nlrcmani/sample-node"
-    registryCredential = 'dockerhub'
+    registryCredential = 'docker-credentials'
     dockerImage = ''
     }
 
